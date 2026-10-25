@@ -4,6 +4,7 @@ Vulkan, NVIDIA via CUDA, Apple via Metal) or the CPU.
   babelscribe talk.mp4                         # auto language, turbo model, best GPU -> talk.srt + talk.json
   babelscribe vo.wav -l th --text-model thai-thonburian   # hybrid: Thai fine-tune text + turbo timing
   babelscribe talk.mp4 --accurate              # slower, fewest errors: large-v3 + beam search, or the best fine-tune
+  babelscribe talk.mp4 --prompt "Pitakpong, babelscribe"   # bias spelling of names and terms
   babelscribe mcp                              # MCP server for AI apps (Claude, Codex, Gemini CLI, ...)
   babelscribe devices                          # list GPUs whisper.cpp can use
   babelscribe models                           # list models and fine-tunes"""
@@ -32,6 +33,7 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--text-model", help="language fine-tune for the text (hybrid mode), e.g. thai-thonburian")
     ap.add_argument("--accurate", action="store_true",
                     help="slower but fewest errors: large-v3 with beam search, or the language's best fine-tune (hybrid)")
+    ap.add_argument("--prompt", help='names and terms to spell correctly, e.g. --prompt "Pitakpong, babelscribe" (whisper initial prompt)')
     ap.add_argument("-f", "--formats", default="srt,json", help="comma list: srt,vtt,txt,json")
     ap.add_argument("-o", "--out", help="output base path (default: next to the input)")
     ap.add_argument("--device", default="auto", help="GPU id from `babelscribe devices`, or auto")
@@ -48,7 +50,7 @@ def main(argv: list[str] | None = None) -> None:
         print(f"auto picks device {backend.pick_device(found)}"); return
     try:
         api.transcribe_file(a.input, a.lang, a.model, a.text_model, a.accurate,
-                            [f.strip() for f in a.formats.split(",") if f.strip()], a.out, a.device, a.bin, a.flavor, a.verbose)
+                            [f.strip() for f in a.formats.split(",") if f.strip()], a.out, a.device, a.bin, a.flavor, a.verbose, prompt=a.prompt)
     except FileNotFoundError as e:
         raise SystemExit(str(e))
 
